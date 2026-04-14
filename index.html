@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRM — La Sala de IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --emerald: #00D26A;
+    --deep-forest: #0B1D17;
+    --forest: #1A3A2A;
+    --sage: #7FB896;
+    --mint: #C8E6D4;
+    --cloud: #EFF7F2;
+    --snow: #F8FBF9;
+    --card-bg: #132921;
+    --border: rgba(127, 184, 150, 0.15);
+    --red: #FF6B6B;
+    --yellow: #FFD166;
+    --blue: #6BB5FF;
+    --purple: #B88EFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Instrument Sans', system-ui, sans-serif;
+    background: var(--deep-forest);
+    color: var(--snow);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .serif { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--emerald); }
+  button { font-family: inherit; }
+
+  /* ============ LAYOUT ============ */
+  .app {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px 32px 80px;
+  }
+
+  /* ============ HEADER ============ */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand svg { width: 40px; height: 40px; }
+  .brand-text .title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand-text .subtitle { font-size: 12px; color: var(--sage); }
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+  .refresh-btn, .export-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--snow);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .refresh-btn:hover, .export-btn:hover { border-color: var(--emerald); color: var(--emerald); }
+  .refresh-btn svg, .export-btn svg { width: 14px; height: 14px; }
+  .refresh-btn.loading svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .last-updated { font-size: 11px; color: var(--sage); opacity: 0.7; }
+
+  /* ============ KPI CARDS ============ */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 22px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .kpi-card:hover { border-color: rgba(0, 210, 106, 0.35); transform: translateY(-2px); }
+  .kpi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(0, 210, 106, 0.08), transparent 40%);
+    pointer-events: none;
+  }
+  .kpi-label {
+    font-size: 12px;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--snow);
+    letter-spacing: -0.02em;
+  }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    margin-top: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(0, 210, 106, 0.12);
+    color: var(--emerald);
+    font-weight: 500;
+  }
+  .kpi-delta.neg { background: rgba(255, 107, 107, 0.12); color: var(--red); }
+  .kpi-delta svg { width: 10px; height: 10px; }
+
+  /* ============ CHARTS ROW ============ */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .chart-subtitle {
+    font-size: 12px;
+    color: var(--sage);
+    margin-bottom: 20px;
+  }
+
+  /* Donut chart (category breakdown) */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .donut {
+    position: relative;
+    flex: 0 0 160px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+  }
+  .donut-hole {
+    position: absolute;
+    inset: 26px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .donut-total {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--snow);
+  }
+  .donut-total-label {
+    font-size: 10px;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+  .legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .legend-swatch {
+    width: 10px; height: 10px; border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .legend-label { flex: 1; color: var(--mint); }
+  .legend-value { color: var(--sage); font-variant-numeric: tabular-nums; }
+  .legend-pct { color: var(--emerald); font-weight: 600; min-width: 42px; text-align: right; }
+
+  /* Timeline bars */
+  .timeline {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 160px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .timeline-bar {
+    flex: 1;
+    background: linear-gradient(to top, var(--emerald), #1db877);
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-height: 3px;
+    transition: transform 0.15s ease;
+    cursor: default;
+  }
+  .timeline-bar:hover { transform: scaleY(1.04); filter: brightness(1.15); }
+  .timeline-bar[data-count="0"] { background: rgba(127, 184, 150, 0.2); }
+  .timeline-bar .tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--deep-forest);
+    border: 1px solid var(--border);
+    color: var(--snow);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .timeline-bar:hover .tooltip { opacity: 1; }
+  .timeline-label {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--sage);
+    white-space: nowrap;
+  }
+
+  /* ============ FILTERS BAR ============ */
+  .filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--snow);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.15s ease;
+  }
+  .search-box input:focus { outline: none; border-color: var(--emerald); }
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--sage);
+  }
+  .filter-select {
+    padding: 11px 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--snow);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .filter-select:focus { outline: none; border-color: var(--emerald); }
+
+  /* ============ TABLE ============ */
+  .table-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: rgba(127, 184, 150, 0.04); }
+  th {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tbody tr { transition: background 0.15s ease; cursor: pointer; }
+  tbody tr:hover { background: rgba(0, 210, 106, 0.04); }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid;
+  }
+  .status-badge .sdot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-nuevo      { color: var(--emerald); border-color: rgba(0, 210, 106, 0.3); background: rgba(0, 210, 106, 0.1); }
+  .status-nuevo      .sdot { background: var(--emerald); }
+  .status-contactado { color: var(--yellow);  border-color: rgba(255, 209, 102, 0.3); background: rgba(255, 209, 102, 0.1); }
+  .status-contactado .sdot { background: var(--yellow); }
+  .status-seguimiento{ color: var(--blue);    border-color: rgba(107, 181, 255, 0.3); background: rgba(107, 181, 255, 0.1); }
+  .status-seguimiento .sdot { background: var(--blue); }
+  .status-cerrado    { color: var(--emerald); border-color: rgba(0, 210, 106, 0.4); background: rgba(0, 210, 106, 0.18); }
+  .status-cerrado    .sdot { background: var(--emerald); }
+  .status-perdido    { color: var(--red);     border-color: rgba(255, 107, 107, 0.3); background: rgba(255, 107, 107, 0.1); }
+  .status-perdido    .sdot { background: var(--red); }
+
+  .contact-cell { display: flex; flex-direction: column; gap: 2px; }
+  .contact-email { font-size: 13px; color: var(--snow); }
+  .contact-phone { font-size: 11px; color: var(--sage); display: inline-flex; align-items: center; gap: 4px; }
+  .contact-phone a { color: var(--sage); text-decoration: none; }
+  .contact-phone a:hover { color: var(--emerald); }
+
+  .cat-tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: rgba(127, 184, 150, 0.1);
+    color: var(--mint);
+    border: 1px solid rgba(127, 184, 150, 0.2);
+  }
+
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--sage);
+  }
+  .empty-state .big { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 28px; color: var(--mint); margin-bottom: 6px; }
+
+  /* ============ MODAL (lead detail) ============ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(11, 29, 23, 0.8);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+    position: relative;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 32px; height: 32px;
+    border: 0; border-radius: 50%;
+    background: rgba(127, 184, 150, 0.1);
+    color: var(--snow);
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .modal-close:hover { background: rgba(255, 107, 107, 0.2); color: var(--red); }
+
+  .modal h2 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .modal .lead-since { font-size: 12px; color: var(--sage); margin-bottom: 24px; }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+  .detail-row:last-of-type { border-bottom: 0; }
+  .detail-row .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--sage);
+    letter-spacing: 0.08em;
+    flex: 0 0 110px;
+  }
+  .detail-row .value {
+    font-size: 14px;
+    color: var(--snow);
+    text-align: right;
+    word-break: break-word;
+  }
+  .detail-row .value a { color: var(--emerald); text-decoration: none; }
+  .detail-row .value a:hover { text-decoration: underline; }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+  }
+  .modal-actions a, .modal-actions button {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--snow);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .modal-actions a:hover, .modal-actions button:hover { border-color: var(--emerald); color: var(--emerald); }
+  .modal-actions .primary {
+    background: var(--emerald);
+    color: var(--deep-forest);
+    border-color: var(--emerald);
+  }
+  .modal-actions .primary:hover { background: #00E075; color: var(--deep-forest); }
+
+  .status-picker {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .status-picker button {
+    flex: 1;
+    min-width: 90px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--sage);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-transform: capitalize;
+  }
+  .status-picker button:hover { border-color: var(--emerald); color: var(--snow); }
+  .status-picker button.active {
+    border-color: var(--emerald);
+    background: rgba(0, 210, 106, 0.15);
+    color: var(--emerald);
+  }
+
+  .notes-area {
+    margin-top: 16px;
+  }
+  .notes-area label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--sage);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .notes-area textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--deep-forest);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--snow);
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 80px;
+  }
+  .notes-area textarea:focus { outline: none; border-color: var(--emerald); }
+
+  /* ============ DEMO BANNER ============ */
+  .demo-banner {
+    background: linear-gradient(90deg, rgba(255, 209, 102, 0.12), rgba(255, 209, 102, 0.04));
+    border: 1px solid rgba(255, 209, 102, 0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--yellow);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .demo-banner strong { font-weight: 600; }
+  .demo-banner .dismiss {
+    margin-left: auto;
+    background: none; border: 0;
+    color: var(--yellow); opacity: 0.7;
+    cursor: pointer; font-size: 18px;
+  }
+  .demo-banner.hidden { display: none; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 680px) {
+    .app { padding: 16px 16px 60px; }
+    header { flex-wrap: wrap; gap: 12px; }
+    .last-updated { display: none; }
+    .kpi-value { font-size: 36px; }
+    .donut-wrap { flex-direction: column; align-items: stretch; }
+    .donut { align-self: center; }
+
+    /* Mobile table: cards */
+    thead { display: none; }
+    tbody tr { display: block; padding: 14px; border-bottom: 1px solid var(--border); }
+    tbody td { display: flex; justify-content: space-between; padding: 6px 0; border: 0; font-size: 13px; }
+    tbody td::before {
+      content: attr(data-label);
+      color: var(--sage);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      align-self: center;
+    }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PASSWORD GATE ============ -->
+<div id="gate" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--deep-forest);padding:20px;">
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:36px 32px;max-width:380px;width:100%;text-align:center;">
+    <svg width="56" height="56" viewBox="0 0 120 120" style="margin-bottom:18px;"><circle cx="60" cy="60" r="54" fill="#00D26A"/><circle cx="46" cy="52" r="4.5" fill="#0B1D17"/><circle cx="74" cy="52" r="4.5" fill="#0B1D17"/><rect x="48" y="70" width="24" height="4.5" rx="2.25" fill="#0B1D17"/></svg>
+    <h2 style="font-size:22px;font-weight:600;margin-bottom:6px;">CRM <span class="serif">— La Sala</span></h2>
+    <p style="font-size:13px;color:var(--sage);margin-bottom:22px;">Área privada. Ingresa la contraseña para continuar.</p>
+    <form id="gateForm" onsubmit="tryUnlock(event)">
+      <input type="password" id="gatePass" placeholder="Contraseña" autofocus
+        style="width:100%;padding:13px 14px;background:var(--deep-forest);border:1px solid var(--border);color:var(--snow);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:12px;" />
+      <button type="submit"
+        style="width:100%;padding:13px;background:var(--emerald);color:var(--deep-forest);border:0;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        Entrar
+      </button>
+      <div id="gateErr" style="color:#FF6B6B;font-size:12px;margin-top:10px;min-height:16px;"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // SHA-256 hash de la contraseña. Para cambiarla: genera un hash nuevo y reemplazalo.
+  // Generar en terminal:  echo -n "tu_password" | shasum -a 256
+  const PASSWORD_HASH = 'a56b2d07f52746aac4e74e4fe04f1f6b5a4f71de2684844fd682aedc767082e9';
+  const SESSION_KEY = 'crm_gate_ok_v1';
+
+  async function sha256(s) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  async function tryUnlock(e) {
+    if (e) e.preventDefault();
+    const pass = document.getElementById('gatePass').value;
+    const h = await sha256(pass);
+    if (h === PASSWORD_HASH) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      document.getElementById('gate').style.display = 'none';
+      document.body.style.overflow = '';
+    } else {
+      document.getElementById('gateErr').textContent = 'Contraseña incorrecta';
+      document.getElementById('gatePass').value = '';
+    }
+  }
+  // Si ya pasó el gate en esta sesión, lo saltamos
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    document.getElementById('gate').style.display = 'none';
+  } else {
+    document.body.style.overflow = 'hidden';
+  }
+</script>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="#00D26A"/><circle cx="46" cy="52" r="4.5" fill="#0B1D17"/><circle cx="74" cy="52" r="4.5" fill="#0B1D17"/><rect x="48" y="70" width="24" height="4.5" rx="2.25" fill="#0B1D17"/></svg>
+      <div class="brand-text">
+        <div class="title">CRM <span class="serif">— La Sala</span></div>
+        <div class="subtitle">Leads del funnel</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="last-updated" id="lastUpdated">Actualizado hace un momento</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="refresh()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refrescar
+      </button>
+      <button class="export-btn" onclick="exportCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+    </div>
+  </header>
+
+  <!-- DEMO BANNER -->
+  <div class="demo-banner" id="demoBanner">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span><strong>Modo demo.</strong> Estos son datos de ejemplo. Para conectar leads reales, abre <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">SETUP.md</code> en la misma carpeta.</span>
+    <button class="dismiss" onclick="document.getElementById('demoBanner').classList.add('hidden')">×</button>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total de leads</div>
+      <div class="kpi-value" id="kpiTotal">0</div>
+      <div class="kpi-delta" id="kpiTotalDelta">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Esta semana</div>
+      <div class="kpi-value" id="kpiWeek">0</div>
+      <div class="kpi-delta" id="kpiWeekDelta">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Hoy</div>
+      <div class="kpi-value" id="kpiToday">0</div>
+      <div class="kpi-delta" id="kpiTodayDelta">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tasa de contacto</div>
+      <div class="kpi-value" id="kpiRate">0%</div>
+      <div class="kpi-delta" id="kpiRateDelta">contactados / total</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Por objetivo</div>
+      <div class="chart-subtitle">¿Qué quieren lograr con AI?</div>
+      <div class="donut-wrap">
+        <div class="donut" id="donut">
+          <div class="donut-hole">
+            <div class="donut-total" id="donutTotal">0</div>
+            <div class="donut-total-label">leads</div>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Últimos 14 días</div>
+      <div class="chart-subtitle">Leads por día</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Buscar por nombre, email, teléfono…" oninput="render()" />
+    </div>
+    <select class="filter-select" id="statusFilter" onchange="render()">
+      <option value="">Todos los estados</option>
+      <option value="nuevo">Nuevo</option>
+      <option value="contactado">Contactado</option>
+      <option value="seguimiento">En seguimiento</option>
+      <option value="cerrado">Cerrado ✓</option>
+      <option value="perdido">Perdido</option>
+    </select>
+    <select class="filter-select" id="categoryFilter" onchange="render()">
+      <option value="">Todos los objetivos</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Nombre</th>
+          <th>Contacto</th>
+          <th>Objetivo</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LEAD DETAIL MODAL -->
+<div class="modal-overlay" id="leadModal" onclick="if(event.target===this) closeLead()">
+  <div class="modal" id="leadModalContent"></div>
+</div>
+
+<script>
+  // ============================================
+  // CONFIG — cuando tengas el webhook, pega el URL acá
+  // ============================================
+  const API_URL = '';  // ej: 'https://script.google.com/macros/s/XXXXX/exec'
+
+  // ============================================
+  // DATOS DE EJEMPLO (se usan si API_URL está vacío)
+  // ============================================
+  const DEMO_LEADS = [
+    { fecha: daysAgo(0),  nombre: 'Carlos Méndez',     email: 'carlos.m@gmail.com',     phone: '+52 55 1234 5678', goal: 'Escalar un negocio que ya tengo' },
+    { fecha: daysAgo(0),  nombre: 'María Rodríguez',   email: 'maria.rod@hotmail.com',  phone: '+34 612 345 678',  goal: 'Crear contenido y monetizarlo' },
+    { fecha: daysAgo(0),  nombre: 'Jorge Luis Perez',  email: 'jorge.p@outlook.com',    phone: '+57 300 123 4567', goal: 'Empezar un negocio desde cero' },
+    { fecha: daysAgo(1),  nombre: 'Ana Fernández',     email: 'anaf@icloud.com',        phone: '+54 11 5678 9012', goal: 'Escalar un negocio que ya tengo' },
+    { fecha: daysAgo(1),  nombre: 'Diego Ramírez',     email: 'diego.ram@gmail.com',    phone: '+52 33 8765 4321', goal: 'Aprender por curiosidad' },
+    { fecha: daysAgo(2),  nombre: 'Lucía Torres',      email: 'lucia.t@gmail.com',      phone: '+51 987 654 321',  goal: 'Crear contenido y monetizarlo' },
+    { fecha: daysAgo(2),  nombre: 'Roberto Silva',     email: 'rsilva@yahoo.com',       phone: '+56 9 8765 4321',  goal: 'Empezar un negocio desde cero' },
+    { fecha: daysAgo(3),  nombre: 'Paula Castro',      email: 'paula.c@gmail.com',      phone: '+52 55 2345 6789', goal: 'Escalar un negocio que ya tengo' },
+    { fecha: daysAgo(3),  nombre: 'Andrés Morales',    email: 'andres.mo@outlook.com',  phone: '+57 310 987 6543', goal: 'Crear contenido y monetizarlo' },
+    { fecha: daysAgo(4),  nombre: 'Valentina Ríos',    email: 'valen.rios@gmail.com',   phone: '+54 341 555 1234', goal: 'Empezar un negocio desde cero' },
+    { fecha: daysAgo(5),  nombre: 'Sebastián López',   email: 'sebaslpz@gmail.com',     phone: '+52 81 1234 5678', goal: 'Aprender por curiosidad' },
+    { fecha: daysAgo(5),  nombre: 'Camila Vargas',     email: 'cami.v@hotmail.com',     phone: '+57 315 456 7890', goal: 'Escalar un negocio que ya tengo' },
+    { fecha: daysAgo(6),  nombre: 'Felipe Navarro',    email: 'felinavarro@icloud.com', phone: '+56 9 2345 6789',  goal: 'Crear contenido y monetizarlo' },
+    { fecha: daysAgo(7),  nombre: 'Isabela Gómez',     email: 'isa.gomez@gmail.com',    phone: '+52 55 9876 5432', goal: 'Empezar un negocio desde cero' },
+    { fecha: daysAgo(8),  nombre: 'Mateo Herrera',     email: 'mateoh@gmail.com',       phone: '+34 698 765 432',  goal: 'Escalar un negocio que ya tengo' },
+    { fecha: daysAgo(9),  nombre: 'Sofía Reyes',       email: 'sofiareyes@gmail.com',   phone: '+52 33 3456 7890', goal: 'Aprender por curiosidad' },
+    { fecha: daysAgo(10), nombre: 'Nicolás Ortiz',     email: 'nico.o@outlook.com',     phone: '+54 11 9876 5432', goal: 'Crear contenido y monetizarlo' },
+    { fecha: daysAgo(11), nombre: 'Regina Duarte',     email: 'regi.d@gmail.com',       phone: '+52 55 7654 3210', goal: 'Empezar un negocio desde cero' },
+    { fecha: daysAgo(12), nombre: 'Esteban Muñoz',     email: 'esteb.m@yahoo.com',      phone: '+56 9 1234 5678',  goal: 'Escalar un negocio que ya tengo' },
+    { fecha: daysAgo(13), nombre: 'Daniela Rojas',     email: 'dani.rojas@gmail.com',   phone: '+57 300 222 3333', goal: 'Crear contenido y monetizarlo' },
+  ];
+
+  function daysAgo(n) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    d.setHours(Math.floor(Math.random()*9)+9, Math.floor(Math.random()*60), 0, 0);
+    return d.toISOString();
+  }
+
+  // ============================================
+  // STATE
+  // ============================================
+  let LEADS = [];
+  const STATUS_KEY = 'crm_status_v1';
+  const NOTES_KEY = 'crm_notes_v1';
+  const localState = {
+    status: JSON.parse(localStorage.getItem(STATUS_KEY) || '{}'),
+    notes:  JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'),
+  };
+  function saveState() {
+    localStorage.setItem(STATUS_KEY, JSON.stringify(localState.status));
+    localStorage.setItem(NOTES_KEY, JSON.stringify(localState.notes));
+  }
+  function leadKey(lead) { return (lead.email || lead.phone || lead.nombre || '').toLowerCase().trim(); }
+  function getStatus(lead) { return localState.status[leadKey(lead)] || 'nuevo'; }
+  function setStatus(lead, s) { localState.status[leadKey(lead)] = s; saveState(); }
+  function getNotes(lead) { return localState.notes[leadKey(lead)] || ''; }
+  function setNotes(lead, n) { localState.notes[leadKey(lead)] = n; saveState(); }
+
+  // ============================================
+  // LOAD
+  // ============================================
+  async function loadLeads() {
+    if (!API_URL) {
+      LEADS = [...DEMO_LEADS];
+      return;
+    }
+    try {
+      const r = await fetch(API_URL + '?action=list');
+      const data = await r.json();
+      LEADS = (data.leads || []).map(row => ({
+        fecha: row.fecha || row.timestamp || row.Fecha,
+        nombre: row.nombre || row.Nombre || row.name,
+        email: row.email || row.Email,
+        phone: row.phone || row.telefono || row.Teléfono || row.WhatsApp,
+        goal: row.goal || row.objetivo || row.Objetivo,
+      }));
+      document.getElementById('demoBanner').classList.add('hidden');
+    } catch (e) {
+      console.error('API error', e);
+      LEADS = [...DEMO_LEADS];
+    }
+  }
+
+  async function refresh() {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('loading');
+    await loadLeads();
+    render();
+    document.getElementById('lastUpdated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
+    setTimeout(() => btn.classList.remove('loading'), 500);
+  }
+
+  // ============================================
+  // RENDER
+  // ============================================
+  const CAT_COLORS = {
+    'Escalar un negocio que ya tengo':   '#00D26A',
+    'Crear contenido y monetizarlo':      '#6BB5FF',
+    'Empezar un negocio desde cero':      '#B88EFF',
+    'Aprender por curiosidad':            '#FFD166',
+  };
+  function catColor(cat) { return CAT_COLORS[cat] || '#7FB896'; }
+
+  function render() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const statusF = document.getElementById('statusFilter').value;
+    const catF = document.getElementById('categoryFilter').value;
+
+    // Populate category filter if empty
+    const catSelect = document.getElementById('categoryFilter');
+    const existingCats = new Set(Array.from(catSelect.options).map(o => o.value));
+    LEADS.forEach(l => {
+      if (l.goal && !existingCats.has(l.goal)) {
+        const opt = document.createElement('option');
+        opt.value = l.goal; opt.textContent = l.goal;
+        catSelect.appendChild(opt);
+        existingCats.add(l.goal);
+      }
+    });
+
+    // Filter
+    const filtered = LEADS.filter(l => {
+      if (q) {
+        const hay = `${l.nombre} ${l.email} ${l.phone}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (statusF && getStatus(l) !== statusF) return false;
+      if (catF && l.goal !== catF) return false;
+      return true;
+    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    renderKPIs();
+    renderDonut();
+    renderTimeline();
+    renderTable(filtered);
+  }
+
+  function renderKPIs() {
+    const now = new Date();
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const week0 = new Date(today0); week0.setDate(week0.getDate() - 6);
+    const yday0 = new Date(today0); yday0.setDate(yday0.getDate() - 1);
+    const prevWeek0 = new Date(today0); prevWeek0.setDate(prevWeek0.getDate() - 13);
+
+    const total = LEADS.length;
+    const today = LEADS.filter(l => new Date(l.fecha) >= today0).length;
+    const yday = LEADS.filter(l => { const d = new Date(l.fecha); return d >= yday0 && d < today0; }).length;
+    const week = LEADS.filter(l => new Date(l.fecha) >= week0).length;
+    const prevWeek = LEADS.filter(l => { const d = new Date(l.fecha); return d >= prevWeek0 && d < week0; }).length;
+    const contacted = LEADS.filter(l => ['contactado', 'seguimiento', 'cerrado'].includes(getStatus(l))).length;
+    const rate = total ? Math.round((contacted / total) * 100) : 0;
+
+    document.getElementById('kpiTotal').textContent = total;
+    document.getElementById('kpiTotalDelta').textContent = total === 0 ? 'sin leads aún' : `${LEADS.filter(l => getStatus(l) === 'nuevo').length} nuevos`;
+
+    document.getElementById('kpiWeek').textContent = week;
+    const wd = delta(week, prevWeek);
+    document.getElementById('kpiWeekDelta').outerHTML = deltaHTML('kpiWeekDelta', wd);
+
+    document.getElementById('kpiToday').textContent = today;
+    const td = delta(today, yday);
+    document.getElementById('kpiTodayDelta').outerHTML = deltaHTML('kpiTodayDelta', td);
+
+    document.getElementById('kpiRate').textContent = rate + '%';
+    document.getElementById('kpiRateDelta').textContent = `${contacted} / ${total}`;
+  }
+  function delta(curr, prev) {
+    if (prev === 0) return { val: curr > 0 ? '+∞' : '0', pos: curr > 0 };
+    const pct = Math.round(((curr - prev) / prev) * 100);
+    return { val: (pct >= 0 ? '+' : '') + pct + '%', pos: pct >= 0 };
+  }
+  function deltaHTML(id, d) {
+    const arrow = d.pos
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+    return `<div class="kpi-delta ${d.pos ? '' : 'neg'}" id="${id}">${arrow} ${d.val} vs periodo anterior</div>`;
+  }
+
+  function renderDonut() {
+    const byCat = {};
+    LEADS.forEach(l => { byCat[l.goal] = (byCat[l.goal] || 0) + 1; });
+    const entries = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
+    const total = LEADS.length;
+    document.getElementById('donutTotal').textContent = total;
+
+    if (total === 0) {
+      document.getElementById('donut').style.background = 'var(--forest)';
+      document.getElementById('legend').innerHTML = '<div style="color: var(--sage); font-size: 13px;">Sin datos aún</div>';
+      return;
+    }
+
+    let gradient = 'conic-gradient(';
+    let acc = 0;
+    entries.forEach(([cat, cnt], i) => {
+      const pct = (cnt / total) * 100;
+      const color = catColor(cat);
+      gradient += `${color} ${acc}% ${acc + pct}%${i < entries.length - 1 ? ', ' : ''}`;
+      acc += pct;
+    });
+    gradient += ')';
+    document.getElementById('donut').style.background = gradient;
+
+    document.getElementById('legend').innerHTML = entries.map(([cat, cnt]) => {
+      const pct = Math.round((cnt / total) * 100);
+      return `<div class="legend-item">
+        <span class="legend-swatch" style="background: ${catColor(cat)}"></span>
+        <span class="legend-label">${cat || 'Sin especificar'}</span>
+        <span class="legend-value">${cnt}</span>
+        <span class="legend-pct">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+
+  function renderTimeline() {
+    const days = 14;
+    const now = new Date();
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const buckets = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today0); d.setDate(d.getDate() - i);
+      const next = new Date(d); next.setDate(next.getDate() + 1);
+      const count = LEADS.filter(l => { const ld = new Date(l.fecha); return ld >= d && ld < next; }).length;
+      buckets.push({ d, count });
+    }
+    const max = Math.max(1, ...buckets.map(b => b.count));
+    document.getElementById('timeline').innerHTML = buckets.map((b, i) => {
+      const h = (b.count / max) * 140;
+      const lbl = b.d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+      const showLabel = i === 0 || i === buckets.length - 1 || i === Math.floor(buckets.length / 2);
+      return `<div class="timeline-bar" data-count="${b.count}" style="height: ${Math.max(h, 3)}px">
+        <div class="tooltip">${b.count} lead${b.count === 1 ? '' : 's'} · ${lbl}</div>
+        ${showLabel ? `<div class="timeline-label">${lbl}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderTable(rows) {
+    const tbody = document.getElementById('tbody');
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
+        <div class="big">Sin resultados</div>
+        <div>No hay leads que coincidan con los filtros.</div>
+      </div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map((l, idx) => {
+      const s = getStatus(l);
+      const fecha = new Date(l.fecha);
+      const fechaStr = fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) + ' · ' + fecha.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+      const waPhone = (l.phone || '').replace(/[^\d]/g, '');
+      return `<tr onclick='openLead(${LEADS.indexOf(l)})'>
+        <td data-label="Estado"><span class="status-badge status-${s}"><span class="sdot"></span>${s}</span></td>
+        <td data-label="Fecha" style="color: var(--sage); font-size: 13px;">${fechaStr}</td>
+        <td data-label="Nombre" style="font-weight: 500;">${escapeHtml(l.nombre || '—')}</td>
+        <td data-label="Contacto"><div class="contact-cell">
+          <span class="contact-email">${escapeHtml(l.email || '—')}</span>
+          <span class="contact-phone">${l.phone ? `<a href="https://wa.me/${waPhone}" target="_blank" onclick="event.stopPropagation()">${escapeHtml(l.phone)}</a>` : '—'}</span>
+        </div></td>
+        <td data-label="Objetivo">${l.goal ? `<span class="cat-tag" style="border-color: ${catColor(l.goal)}40; color: ${catColor(l.goal)}">${escapeHtml(l.goal)}</span>` : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ============================================
+  // LEAD DETAIL MODAL
+  // ============================================
+  function openLead(idx) {
+    const l = LEADS[idx];
+    if (!l) return;
+    const s = getStatus(l);
+    const waPhone = (l.phone || '').replace(/[^\d]/g, '');
+    const fecha = new Date(l.fecha);
+    const fechaFull = fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + fecha.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+    const statuses = ['nuevo', 'contactado', 'seguimiento', 'cerrado', 'perdido'];
+
+    document.getElementById('leadModalContent').innerHTML = `
+      <button class="modal-close" onclick="closeLead()">×</button>
+      <h2>${escapeHtml(l.nombre || 'Sin nombre')}</h2>
+      <div class="lead-since">Llegó el ${fechaFull}</div>
+
+      <div class="detail-row">
+        <span class="label">Estado</span>
+        <span class="value"><span class="status-badge status-${s}"><span class="sdot"></span>${s}</span></span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Email</span>
+        <span class="value">${l.email ? `<a href="mailto:${l.email}">${escapeHtml(l.email)}</a>` : '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">WhatsApp</span>
+        <span class="value">${l.phone ? `<a href="https://wa.me/${waPhone}" target="_blank">${escapeHtml(l.phone)}</a>` : '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Objetivo</span>
+        <span class="value">${l.goal ? `<span class="cat-tag" style="border-color: ${catColor(l.goal)}40; color: ${catColor(l.goal)}">${escapeHtml(l.goal)}</span>` : '—'}</span>
+      </div>
+
+      <div class="status-picker">
+        ${statuses.map(st => `<button class="${st === s ? 'active' : ''}" onclick="changeStatus(${idx}, '${st}')">${st}</button>`).join('')}
+      </div>
+
+      <div class="notes-area">
+        <label>Notas privadas</label>
+        <textarea id="leadNotes" placeholder="Call at 3pm, pidió descuento, etc..." oninput="saveNotesFromField(${idx})">${escapeHtml(getNotes(l))}</textarea>
+      </div>
+
+      <div class="modal-actions">
+        ${l.phone ? `<a class="primary" href="https://wa.me/${waPhone}?text=${encodeURIComponent('Hola ' + (l.nombre || '').split(' ')[0] + ', soy Kevin de La Sala de IA 👋')}" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/></svg>
+          WhatsApp
+        </a>` : ''}
+        ${l.email ? `<a href="mailto:${l.email}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email
+        </a>` : ''}
+      </div>
+    `;
+    document.getElementById('leadModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLead() {
+    document.getElementById('leadModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function changeStatus(idx, s) {
+    setStatus(LEADS[idx], s);
+    openLead(idx);
+    render();
+  }
+  function saveNotesFromField(idx) {
+    const n = document.getElementById('leadNotes').value;
+    setNotes(LEADS[idx], n);
+  }
+
+  // ============================================
+  // EXPORT CSV
+  // ============================================
+  function exportCSV() {
+    const header = ['Fecha', 'Nombre', 'Email', 'WhatsApp', 'Objetivo', 'Estado', 'Notas'];
+    const rows = LEADS.map(l => [
+      new Date(l.fecha).toISOString(),
+      l.nombre || '',
+      l.email || '',
+      l.phone || '',
+      l.goal || '',
+      getStatus(l),
+      getNotes(l).replace(/\n/g, ' '),
+    ]);
+    const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leads-la-sala-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ============================================
+  // INIT
+  // ============================================
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLead(); });
+
+  (async function init() {
+    await loadLeads();
+    render();
+    document.getElementById('lastUpdated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
+  })();
+</script>
+</body>
+</html>
