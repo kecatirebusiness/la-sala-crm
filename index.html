@@ -942,7 +942,7 @@
   // ============================================
   // CONFIG — cuando tengas el webhook, pega el URL acá
   // ============================================
-  const API_URL = '';  // ej: 'https://script.google.com/macros/s/XXXXX/exec'
+  const API_URL = 'https://script.google.com/macros/s/AKfycbx4lMpMjSD4aGnMNOdu3DwnnV8XITHB6t2smF7vh5KYa-OdztslQIxufsgmWrbaI32J/exec';
 
   // ============================================
   // DATOS DE EJEMPLO (se usan si API_URL está vacío)
@@ -1306,10 +1306,36 @@
   // ============================================
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLead(); });
 
-  (async function init() {
+  let prevLeadCount = 0;
+  async function silentRefresh() {
     await loadLeads();
+    // Notificar si hay leads nuevos (solo si ya cargó al menos 1 vez)
+    if (prevLeadCount > 0 && LEADS.length > prevLeadCount) {
+      const diff = LEADS.length - prevLeadCount;
+      showNewLeadToast(diff);
+    }
+    prevLeadCount = LEADS.length;
     render();
     document.getElementById('lastUpdated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'});
+  }
+
+  function showNewLeadToast(n) {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--emerald);color:var(--deep-forest);padding:14px 22px;border-radius:999px;font-weight:600;font-size:14px;z-index:200;box-shadow:0 10px 40px rgba(0,210,106,0.5);transition:transform 0.3s ease;';
+    toast.textContent = `🔥 ${n} lead nuevo${n > 1 ? 's' : ''}`;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.style.transform = 'translateX(-50%) translateY(0)');
+    setTimeout(() => {
+      toast.style.transform = 'translateX(-50%) translateY(100px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
+
+  (async function init() {
+    await silentRefresh();
+    prevLeadCount = LEADS.length;
+    // Auto-refresh cada 30 segundos
+    setInterval(silentRefresh, 30000);
   })();
 </script>
 </body>
