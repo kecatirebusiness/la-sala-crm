@@ -558,27 +558,214 @@
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .charts-grid { grid-template-columns: 1fr; }
   }
-  @media (max-width: 680px) {
-    .app { padding: 16px 16px 60px; }
-    header { flex-wrap: wrap; gap: 12px; }
-    .last-updated { display: none; }
-    .kpi-value { font-size: 36px; }
-    .donut-wrap { flex-direction: column; align-items: stretch; }
-    .donut { align-self: center; }
 
-    /* Mobile table: cards */
-    thead { display: none; }
-    tbody tr { display: block; padding: 14px; border-bottom: 1px solid var(--border); }
-    tbody td { display: flex; justify-content: space-between; padding: 6px 0; border: 0; font-size: 13px; }
-    tbody td::before {
-      content: attr(data-label);
-      color: var(--sage);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      align-self: center;
+  /* ==========================================
+     MOBILE REDESIGN (≤ 720px)
+     ========================================== */
+  @media (max-width: 720px) {
+    .app { padding: 16px 14px 40px; }
+
+    /* ---- HEADER compacto ---- */
+    header {
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      gap: 10px;
     }
-    .modal { padding: 24px 20px; }
+    .brand svg { width: 34px; height: 34px; }
+    .brand-text .title { font-size: 16px; }
+    .brand-text .subtitle { display: none; }
+    .last-updated { display: none; }
+
+    .header-actions { gap: 6px; }
+    .refresh-btn, .export-btn {
+      padding: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      justify-content: center;
+      font-size: 0;
+      gap: 0;
+    }
+    .refresh-btn svg, .export-btn svg { width: 16px; height: 16px; }
+
+    /* ---- Demo banner más compacto ---- */
+    .demo-banner { font-size: 12px; padding: 10px 12px; border-radius: 10px; margin-bottom: 16px; }
+    .demo-banner svg { flex-shrink: 0; }
+
+    /* ---- KPI Cards: 2x2 compacto ---- */
+    .kpi-grid { gap: 10px; margin-bottom: 20px; }
+    .kpi-card { padding: 16px 14px 14px; border-radius: 14px; }
+    .kpi-label { font-size: 10px; margin-bottom: 6px; letter-spacing: 0.06em; }
+    .kpi-value { font-size: 32px; line-height: 1; }
+    .kpi-delta { font-size: 10px; margin-top: 8px; padding: 2px 7px; }
+    .kpi-delta svg { width: 8px; height: 8px; }
+
+    /* ---- Charts ---- */
+    .charts-grid { gap: 12px; margin-bottom: 20px; }
+    .chart-card { padding: 18px 16px; border-radius: 14px; }
+    .chart-title { font-size: 13px; }
+    .chart-subtitle { font-size: 11px; margin-bottom: 16px; }
+
+    .donut-wrap { flex-direction: column; gap: 18px; }
+    .donut { flex: 0 0 140px; width: 140px; height: 140px; align-self: center; }
+    .donut-hole { inset: 22px; }
+    .donut-total { font-size: 26px; }
+    .donut-total-label { font-size: 9px; }
+    .legend-item { font-size: 12px; gap: 8px; }
+    .legend-pct { min-width: 36px; font-size: 12px; }
+
+    .timeline { height: 120px; padding-bottom: 16px; gap: 4px; }
+    .timeline-label { font-size: 9px; }
+
+    /* ---- Filters: stack vertical ---- */
+    .filters { gap: 8px; margin-bottom: 14px; }
+    .search-box { min-width: 100%; }
+    .search-box input { padding: 12px 14px 12px 36px; font-size: 14px; }
+    .filter-select {
+      flex: 1;
+      min-width: calc(50% - 4px);
+      padding: 11px 12px;
+      font-size: 12.5px;
+    }
+
+    /* ---- Leads como cards nativas ---- */
+    .table-card {
+      background: transparent;
+      border: 0;
+      overflow: visible;
+    }
+    table, tbody { display: block; }
+    thead { display: none; }
+    tbody {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    tbody tr {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "name status"
+        "contact contact"
+        "footer footer";
+      gap: 10px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    tbody tr:active {
+      transform: scale(0.98);
+      border-color: var(--emerald);
+    }
+    tbody tr:hover { background: var(--card-bg); }
+    tbody td {
+      padding: 0;
+      border: 0;
+      font-size: 13px;
+    }
+    tbody td::before { display: none; }
+
+    /* Card zones */
+    tbody td[data-label="Nombre"]   { grid-area: name; font-size: 15px; font-weight: 600; color: var(--snow); letter-spacing: -0.01em; }
+    tbody td[data-label="Estado"]   { grid-area: status; justify-self: end; align-self: start; }
+    tbody td[data-label="Contacto"] { grid-area: contact; }
+    tbody td[data-label="Objetivo"] { grid-area: footer; display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 2px; }
+    tbody td[data-label="Fecha"]    {
+      grid-area: footer;
+      position: absolute;
+      right: 14px;
+      bottom: 12px;
+      font-size: 11px;
+      color: var(--sage);
+      pointer-events: none;
+      background: none;
+    }
+    /* Re-layout: merge fecha into footer */
+    tbody tr { position: relative; }
+
+    .contact-cell { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .contact-email {
+      font-size: 12px;
+      color: var(--mint);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .contact-phone { font-size: 12px; }
+    .contact-phone a {
+      color: var(--emerald);
+      background: rgba(0, 210, 106, 0.1);
+      padding: 3px 9px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .contact-phone a::before { content: "📱"; font-size: 10px; }
+
+    .cat-tag { font-size: 10.5px; padding: 3px 8px; }
+    .status-badge { font-size: 10px; padding: 3px 8px; }
+
+    /* ---- Modal como bottom-sheet ---- */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      max-width: 100%;
+      width: 100%;
+      border-radius: 24px 24px 0 0;
+      max-height: 92vh;
+      padding: 24px 20px 28px;
+      animation: sheetUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal::before {
+      content: "";
+      display: block;
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: -8px auto 18px;
+    }
+    .modal h2 { font-size: 20px; }
+    .modal .lead-since { font-size: 11px; margin-bottom: 18px; }
+    .modal-close { top: 12px; right: 12px; width: 30px; height: 30px; font-size: 16px; }
+
+    .detail-row { padding: 8px 0; gap: 12px; flex-wrap: wrap; }
+    .detail-row .label { flex: 0 0 100%; font-size: 10px; }
+    .detail-row .value { text-align: left; font-size: 14px; width: 100%; }
+
+    .status-picker { margin-top: 14px; gap: 4px; }
+    .status-picker button { min-width: 0; padding: 7px 4px; font-size: 10px; }
+
+    .modal-actions { gap: 8px; margin-top: 18px; }
+    .modal-actions a, .modal-actions button {
+      min-width: 0;
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    /* ---- Empty state ---- */
+    .empty-state { padding: 40px 16px; }
+    .empty-state .big { font-size: 22px; }
+
+    /* ---- Gate screen mobile ---- */
+    #gate > div { padding: 28px 22px; }
+  }
+
+  /* Breakpoint muy chico (iPhone SE / 375px) */
+  @media (max-width: 380px) {
+    .app { padding: 14px 12px 40px; }
+    .kpi-value { font-size: 28px; }
+    .donut { width: 130px; height: 130px; flex-basis: 130px; }
+    .filter-select { min-width: 100%; }
+    tbody tr { padding: 12px 12px 10px; }
   }
 </style>
 </head>
