@@ -1009,11 +1009,11 @@
       const r = await fetch(API_URL + '?action=list');
       const data = await r.json();
       LEADS = (data.leads || []).map(row => ({
-        fecha: row.fecha || row.timestamp || row.Fecha,
-        nombre: row.nombre || row.Nombre || row.name,
-        email: row.email || row.Email,
-        phone: row.phone || row.telefono || row.Teléfono || row.WhatsApp,
-        goal: row.goal || row.objetivo || row.Objetivo,
+        fecha: row.fecha || row.timestamp || row.Fecha || '',
+        nombre: String(row.nombre ?? row.Nombre ?? row.name ?? ''),
+        email: String(row.email ?? row.Email ?? ''),
+        phone: String(row.phone ?? row.telefono ?? row.Teléfono ?? row.WhatsApp ?? ''),
+        goal: String(row.goal ?? row.objetivo ?? row.Objetivo ?? ''),
       }));
       document.getElementById('demoBanner').classList.add('hidden');
     } catch (e) {
